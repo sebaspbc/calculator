@@ -1,0 +1,15 @@
+# Backend (Go)
+backend/server
+backend/*.exe
+
+# Frontend (Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/coverage/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
