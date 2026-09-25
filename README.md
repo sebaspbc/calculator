@@ -10,7 +10,7 @@ Full-stack calculator application built as a technical assessment. React
 (TypeScript) frontend consuming a Go REST API backend, with basic and advanced
 arithmetic operations, input validation, unit tests, and Docker support.
 
-**Live demo:** [frontend URL] · **API:** [backend URL]
+**Live demo:** https://calculator-sezzle.netlify.app · **API:** https://calculator-sezzle.onrender.com
 
 ### Tech stack
 
@@ -149,7 +149,7 @@ Aplicación de calculadora full-stack construida como prueba técnica. Frontend 
 React (TypeScript) que consume una API REST en Go, con operaciones aritméticas
 básicas y avanzadas, validación de entrada, tests unitarios y soporte Docker.
 
-**Demo en vivo:** [URL del frontend] · **API:** [URL del backend]
+**Live demo:** https://calculator-sezzle.netlify.app · **API:** https://calculator-sezzle.onrender.com
 
 ### Stack tecnológico
 
