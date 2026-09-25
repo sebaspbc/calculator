@@ -13,3 +13,8 @@ frontend/coverage/
 Thumbs.db
 .vscode/
 .idea/
+
+# Test coverage reports
+backend/coverage.out
+backend/coverage.html
+frontend/coverage/
