@@ -6,9 +6,7 @@
 
 ## English
 
-Full-stack calculator application built as a technical assessment. React
-(TypeScript) frontend consuming a Go REST API backend, with basic and advanced
-arithmetic operations, input validation, unit tests, and Docker support.
+Full-stack calculator application built as a technical assessment. React (TypeScript) frontend consuming a Go REST API backend, with basic and advanced arithmetic operations, input validation, unit tests, and Docker support.
 
 **Live demo:** https://calculator-sezzle.netlify.app · **API:** https://calculator-sezzle.onrender.com
 
@@ -21,7 +19,7 @@ arithmetic operations, input validation, unit tests, and Docker support.
 
 ### Project structure
 
-\`\`\`
+```
 Calculator/
 ├── backend/
 │   ├── cmd/                  # entry point (main.go)
@@ -39,117 +37,156 @@ Calculator/
 ├── docker-compose.yml
 ├── PROMPTS.md                # AI usage log
 └── README.md
-\`\`\`
+```
 
 ### Setup & running locally
 
 **Prerequisites:** Go 1.22+, Node.js 20+, Docker (optional).
 
 **Backend:**
-\`\`\`bash
+
+```bash
 cd backend
 go mod tidy
 go run ./cmd
-\`\`\`
+```
+
 Server starts on `http://localhost:8080`. Health check: `GET /health`.
 
 **Frontend:**
-\`\`\`bash
+
+```bash
 cd frontend
-cp .env.example .env   # sets VITE_API_URL=http://localhost:8080
+cp .env.example .env
 npm install
 npm run dev
-\`\`\`
-App starts on `http://localhost:5173`.
+```
+
+`.env` sets `VITE_API_URL=http://localhost:8080`. App starts on `http://localhost:5173`.
 
 **Docker Compose (both services):**
-\`\`\`bash
+
+```bash
 docker compose up --build
-\`\`\`
+```
+
 Frontend: `http://localhost:3000` · Backend: `http://localhost:8080`
 
 ### Running tests
 
-\`\`\`bash
+```bash
 # Backend, with coverage
-cd backend && go test ./... -v -cover
+cd backend
+go test ./... -v -cover
+```
 
+```bash
 # Frontend, with coverage
-cd frontend && npm run test
-\`\`\`
+cd frontend
+npm run test
+```
 
 ### API reference
 
 **`POST /api/v1/calculate`**
 
-| Field       | Type   | Required | Notes                                      |
-|-------------|--------|----------|---------------------------------------------|
-| `operation` | string | yes      | `add`, `subtract`, `multiply`, `divide`, `power`, `sqrt`, `percentage` |
-| `a`         | number | yes      | First operand                               |
-| `b`         | number | conditional | Required for binary operations. Not used for `sqrt`/`percentage`. |
+| Field       | Type   | Required    | Notes                                                                  |
+|-------------|--------|-------------|-------------------------------------------------------------------------|
+| `operation` | string | yes         | `add`, `subtract`, `multiply`, `divide`, `power`, `sqrt`, `percentage` |
+| `a`         | number | yes         | First operand                                                          |
+| `b`         | number | conditional | Required for binary operations. Not used for `sqrt`/`percentage`.     |
 
-Success — `200 OK`: `{ "result": 8 }`
-Error — `400`/`422`: `{ "error": "division by zero is not allowed" }`
+Success — `200 OK`:
+
+```json
+{ "result": 8 }
+```
+
+Error — `400`/`422`:
+
+```json
+{ "error": "division by zero is not allowed" }
+```
 
 **Examples:**
-\`\`\`bash
-curl -X POST http://localhost:8080/api/v1/calculate \\
-  -H "Content-Type: application/json" \\
+
+```bash
+# Addition
+curl -X POST http://localhost:8080/api/v1/calculate \
+  -H "Content-Type: application/json" \
   -d '{"operation":"add","a":5,"b":3}'
 # → {"result":8}
+```
 
-curl -X POST http://localhost:8080/api/v1/calculate \\
-  -H "Content-Type: application/json" \\
+```bash
+# Square root (unary — no "b" needed)
+curl -X POST http://localhost:8080/api/v1/calculate \
+  -H "Content-Type: application/json" \
   -d '{"operation":"sqrt","a":16}'
 # → {"result":4}
+```
 
-curl -X POST http://localhost:8080/api/v1/calculate \\
-  -H "Content-Type: application/json" \\
+```bash
+# Division by zero
+curl -X POST http://localhost:8080/api/v1/calculate \
+  -H "Content-Type: application/json" \
   -d '{"operation":"divide","a":10,"b":0}'
 # → {"error":"division by zero is not allowed"}
-\`\`\`
+```
 
 ### Design decisions & assumptions
 
 - **Go was chosen for the backend** per the assignment's stated preference.
-- **Layered backend architecture** (`calculator` → `service` → `handlers`): the
-  service layer exists as an interface consumed by the HTTP handler, enabling
-  dependency injection and isolated handler tests via a mock — without a
-  `Repository`/`Model` layer, since this project has no persistence.
-- **`b` as `*float64` (pointer)** in the domain layer distinguishes "operand not
-  provided" (`nil`) from "operand is zero" (`&0.0`) — meaningful for division and
-  for validating unary vs. binary operations.
-- **Percentage** is implemented as a unary operation (`a / 100`), since the
-  assignment didn't specify two-operand percentage semantics.
-- **CORS** is restricted to a single configurable origin (`FRONTEND_ORIGIN` env
-  var) rather than a wildcard.
-- **Chaining behavior** (`5 + 3 + 2` without pressing `=`) mirrors standard
-  physical calculator UX.
-- **Operation history** (last 10 operations, client-side only) was added as a UX
-  enhancement beyond the core requirements.
+- **Layered backend architecture** (`calculator` → `service` → `handlers`): the service layer exists as an interface consumed by the HTTP handler, enabling dependency injection and isolated handler tests via a mock — without a `Repository`/`Model` layer, since this project has no persistence.
+- **`b` as `*float64` (pointer)** in the domain layer distinguishes "operand not provided" (`nil`) from "operand is zero" (`&0.0`) — meaningful for division and for validating unary vs. binary operations.
+- **Percentage** is implemented as a unary operation (`a / 100`), since the assignment didn't specify two-operand percentage semantics.
+- **CORS** is restricted to a single configurable origin (`FRONTEND_ORIGIN` env var) rather than a wildcard.
+- **Chaining behavior** (`5 + 3 + 2` without pressing `=`) mirrors standard physical calculator UX.
+- **Operation history** (last 10 operations, client-side only) was added as a UX enhancement beyond the core requirements.
+
+### Test coverage
+
+| Layer                                   | Coverage |
+|------------------------------------------|----------|
+| Backend — `calculator` (domain logic)     | 100%     |
+| Backend — `service`                       | 100%     |
+| Backend — `handlers` (HTTP layer)         | 84%      |
+| Frontend — `api.ts` (HTTP client)         | 100%     |
+| Frontend — `Calculator.tsx` (component)   | 82%      |
+
+`App.tsx`, `main.tsx`, and the Go `cmd` entry point show 0% coverage by design — they contain only bootstrapping code (React root mount, HTTP server startup) with no business logic to test. Business logic is fully covered in the layers above.
+
+To regenerate reports locally:
+
+```bash
+# Backend
+cd backend
+go test ./... -coverprofile=coverage.out
+go tool cover -html=coverage.out -o coverage.html
+```
+
+```bash
+# Frontend
+cd frontend
+npm run test
+```
 
 ### Deployment
 
-- **Backend:** [Render](https://render.com), Docker-based web service using
-  `backend/Dockerfile`. Env vars: `FRONTEND_ORIGIN` (set to the Netlify URL), `PORT`
-  (set automatically by Render).
-- **Frontend:** [Netlify](https://netlify.com), built from `frontend/` with
-  `VITE_API_URL` set to the Render backend URL at build time.
+- **Backend:** [Render](https://render.com), Docker-based web service using `backend/Dockerfile`. Env vars: `FRONTEND_ORIGIN` (set to the Netlify URL), `PORT` (set automatically by Render).
+- **Frontend:** [Netlify](https://netlify.com), built from `frontend/` with `VITE_API_URL` set to the Render backend URL at build time.
 
 ### AI usage
 
-Built with assistance from Claude (Anthropic). See [`PROMPTS.md`](./PROMPTS.md) for
-a summary of how AI was used throughout development.
+Built with assistance from Claude (Anthropic). See [`PROMPTS.md`](./PROMPTS.md) for a summary of how AI was used throughout development.
 
 ---
 
 ## Español
 
-Aplicación de calculadora full-stack construida como prueba técnica. Frontend en
-React (TypeScript) que consume una API REST en Go, con operaciones aritméticas
-básicas y avanzadas, validación de entrada, tests unitarios y soporte Docker.
+Aplicación de calculadora full-stack construida como prueba técnica. Frontend en React (TypeScript) que consume una API REST en Go, con operaciones aritméticas básicas y avanzadas, validación de entrada, tests unitarios y soporte Docker.
 
-**Live demo:** https://calculator-sezzle.netlify.app · **API:** https://calculator-sezzle.onrender.com
+**Demo en vivo:** https://calculator-sezzle.netlify.app · **API:** https://calculator-sezzle.onrender.com
 
 ### Stack tecnológico
 
@@ -160,7 +197,7 @@ básicas y avanzadas, validación de entrada, tests unitarios y soporte Docker.
 
 ### Estructura del proyecto
 
-\`\`\`
+```
 Calculator/
 ├── backend/
 │   ├── cmd/                  # punto de entrada (main.go)
@@ -178,104 +215,145 @@ Calculator/
 ├── docker-compose.yml
 ├── PROMPTS.md                # log de uso de IA
 └── README.md
-\`\`\`
+```
 
 ### Instalación y ejecución local
 
 **Requisitos:** Go 1.22+, Node.js 20+, Docker (opcional).
 
 **Backend:**
-\`\`\`bash
+
+```bash
 cd backend
 go mod tidy
 go run ./cmd
-\`\`\`
+```
+
 El servidor arranca en `http://localhost:8080`. Health check: `GET /health`.
 
 **Frontend:**
-\`\`\`bash
+
+```bash
 cd frontend
-cp .env.example .env   # define VITE_API_URL=http://localhost:8080
+cp .env.example .env
 npm install
 npm run dev
-\`\`\`
-La app arranca en `http://localhost:5173`.
+```
+
+`.env` define `VITE_API_URL=http://localhost:8080`. La app arranca en `http://localhost:5173`.
 
 **Docker Compose (ambos servicios):**
-\`\`\`bash
+
+```bash
 docker compose up --build
-\`\`\`
+```
+
 Frontend: `http://localhost:3000` · Backend: `http://localhost:8080`
 
 ### Ejecutar tests
 
-\`\`\`bash
+```bash
 # Backend, con cobertura
-cd backend && go test ./... -v -cover
+cd backend
+go test ./... -v -cover
+```
 
+```bash
 # Frontend, con cobertura
-cd frontend && npm run test
-\`\`\`
+cd frontend
+npm run test
+```
 
 ### Referencia de la API
 
 **`POST /api/v1/calculate`**
 
-| Campo       | Tipo   | Requerido | Notas                                      |
-|-------------|--------|-----------|---------------------------------------------|
-| `operation` | string | sí        | `add`, `subtract`, `multiply`, `divide`, `power`, `sqrt`, `percentage` |
-| `a`         | number | sí        | Primer operando                             |
-| `b`         | number | condicional | Requerido para operaciones binarias. No se usa en `sqrt`/`percentage`. |
+| Campo       | Tipo   | Requerido   | Notas                                                                    |
+|-------------|--------|-------------|----------------------------------------------------------------------------|
+| `operation` | string | sí          | `add`, `subtract`, `multiply`, `divide`, `power`, `sqrt`, `percentage`   |
+| `a`         | number | sí          | Primer operando                                                          |
+| `b`         | number | condicional | Requerido para operaciones binarias. No se usa en `sqrt`/`percentage`.  |
 
-Éxito — `200 OK`: `{ "result": 8 }`
-Error — `400`/`422`: `{ "error": "division by zero is not allowed" }`
+Éxito — `200 OK`:
+
+```json
+{ "result": 8 }
+```
+
+Error — `400`/`422`:
+
+```json
+{ "error": "division by zero is not allowed" }
+```
 
 **Ejemplos:**
-\`\`\`bash
-curl -X POST http://localhost:8080/api/v1/calculate \\
-  -H "Content-Type: application/json" \\
+
+```bash
+# Suma
+curl -X POST http://localhost:8080/api/v1/calculate \
+  -H "Content-Type: application/json" \
   -d '{"operation":"add","a":5,"b":3}'
 # → {"result":8}
+```
 
-curl -X POST http://localhost:8080/api/v1/calculate \\
-  -H "Content-Type: application/json" \\
+```bash
+# Raíz cuadrada (unaria — no necesita "b")
+curl -X POST http://localhost:8080/api/v1/calculate \
+  -H "Content-Type: application/json" \
   -d '{"operation":"sqrt","a":16}'
 # → {"result":4}
+```
 
-curl -X POST http://localhost:8080/api/v1/calculate \\
-  -H "Content-Type: application/json" \\
+```bash
+# División por cero
+curl -X POST http://localhost:8080/api/v1/calculate \
+  -H "Content-Type: application/json" \
   -d '{"operation":"divide","a":10,"b":0}'
 # → {"error":"division by zero is not allowed"}
-\`\`\`
+```
 
 ### Decisiones de diseño y supuestos
 
 - **Se eligió Go para el backend** según la preferencia indicada en el enunciado.
-- **Arquitectura en capas** (`calculator` → `service` → `handlers`): la capa de
-  servicio existe como interfaz consumida por el handler HTTP, permitiendo
-  inyección de dependencias y tests aislados del handler vía un mock — sin capa de
-  `Repository/Model`, ya que este proyecto no tiene persistencia.
-- **`b` como `*float64` (puntero)** en la capa de dominio distingue "operando no
-  provisto" (`nil`) de "operando es cero" (`&0.0`) — relevante para división y para
-  validar operaciones unarias vs. binarias.
-- **Percentage** se implementó como operación unaria (`a / 100`), ya que el
-  enunciado no especificó semántica de porcentaje con dos operandos.
-- **CORS** restringido a un único origen configurable (variable `FRONTEND_ORIGIN`)
-  en vez de un wildcard.
-- **Encadenamiento de operaciones** (`5 + 3 + 2` sin presionar `=`) imita el
-  comportamiento estándar de una calculadora física.
-- **Historial de operaciones** (últimas 10, solo del lado del cliente) se agregó
-  como mejora de UX más allá de los requisitos base.
+- **Arquitectura en capas** (`calculator` → `service` → `handlers`): la capa de servicio existe como interfaz consumida por el handler HTTP, permitiendo inyección de dependencias y tests aislados del handler vía un mock — sin capa de `Repository/Model`, ya que este proyecto no tiene persistencia.
+- **`b` como `*float64` (puntero)** en la capa de dominio distingue "operando no provisto" (`nil`) de "operando es cero" (`&0.0`) — relevante para división y para validar operaciones unarias vs. binarias.
+- **Percentage** se implementó como operación unaria (`a / 100`), ya que el enunciado no especificó semántica de porcentaje con dos operandos.
+- **CORS** restringido a un único origen configurable (variable `FRONTEND_ORIGIN`) en vez de un wildcard.
+- **Encadenamiento de operaciones** (`5 + 3 + 2` sin presionar `=`) imita el comportamiento estándar de una calculadora física.
+- **Historial de operaciones** (últimas 10, solo del lado del cliente) se agregó como mejora de UX más allá de los requisitos base.
+
+### Cobertura de tests
+
+| Capa                                        | Cobertura |
+|----------------------------------------------|-----------|
+| Backend — `calculator` (lógica de dominio)    | 100%      |
+| Backend — `service`                           | 100%      |
+| Backend — `handlers` (capa HTTP)              | 84%       |
+| Frontend — `api.ts` (cliente HTTP)            | 100%      |
+| Frontend — `Calculator.tsx` (componente)      | 82%       |
+
+`App.tsx`, `main.tsx`, y el entry point `cmd` de Go muestran 0% de cobertura por diseño — contienen solo código de arranque (montaje de React, inicio del servidor HTTP) sin lógica de negocio que testear. La lógica de negocio está completamente cubierta en las capas de arriba.
+
+Para regenerar los reportes localmente:
+
+```bash
+# Backend
+cd backend
+go test ./... -coverprofile=coverage.out
+go tool cover -html=coverage.out -o coverage.html
+```
+
+```bash
+# Frontend
+cd frontend
+npm run test
+```
 
 ### Despliegue
 
-- **Backend:** [Render](https://render.com), servicio web basado en Docker usando
-  `backend/Dockerfile`. Variables de entorno: `FRONTEND_ORIGIN` (URL de Netlify),
-  `PORT` (definida automáticamente por Render).
-- **Frontend:** [Netlify](https://netlify.com), build desde `frontend/` con
-  `VITE_API_URL` apuntando a la URL del backend en Render al momento del build.
+- **Backend:** [Render](https://render.com), servicio web basado en Docker usando `backend/Dockerfile`. Variables de entorno: `FRONTEND_ORIGIN` (URL de Netlify), `PORT` (definida automáticamente por Render).
+- **Frontend:** [Netlify](https://netlify.com), build desde `frontend/` con `VITE_API_URL` apuntando a la URL del backend en Render al momento del build.
 
 ### Uso de IA
 
-Construido con asistencia de Claude (Anthropic). Ver [`PROMPTS.md`](./PROMPTS.md)
-para un resumen de cómo se usó la IA durante el desarrollo.
+Construido con asistencia de Claude (Anthropic). Ver [`PROMPTS.md`](./PROMPTS.md) para un resumen de cómo se usó la IA durante el desarrollo.
